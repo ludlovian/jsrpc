@@ -45,6 +45,8 @@ export default class RpcServer {
 
   stop () {
     return new Promise((resolve, reject) => {
+      this.idleTimeout = undefined
+      this.touch()
       this.server.stop(err => {
         // istanbul ignore if
         if (err) return reject(err)

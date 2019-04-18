@@ -109,6 +109,8 @@ class RpcServer {
   }
   stop () {
     return new Promise((resolve, reject) => {
+      this.idleTimeout = undefined;
+      this.touch();
       this.server.stop(err => {
         if (err) return reject(err)
         resolve(this);
