@@ -1,6 +1,6 @@
 {
   "name": "jsrpc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Basic RPC over http",
   "main": "dist/client.js",
   "module": "dist/client.mjs",
