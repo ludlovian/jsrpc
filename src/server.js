@@ -17,10 +17,10 @@ export default class RpcServer {
     this.options = otherOptions
     this.methods = {}
     this.server = stoppable(
-      http.createServer((req, res) => this.handle(req, res)),
+      http.createServer((req, res) => this._handle(req, res)),
       5000
     )
-    this.touch()
+    this._touch()
   }
 
   static create (options) {
@@ -38,6 +38,7 @@ export default class RpcServer {
       this.server.listen(this.options, err => {
         // istanbul ignore if
         if (err) return reject(err)
+        this.log('start')
         resolve(this)
       })
     })
@@ -46,16 +47,19 @@ export default class RpcServer {
   stop () {
     return new Promise((resolve, reject) => {
       this.idleTimeout = undefined
-      this.touch()
+      this._touch()
       this.server.stop(err => {
         // istanbul ignore if
         if (err) return reject(err)
+        this.log('stop')
         resolve(this)
       })
     })
   }
 
-  touch () {
+  log () {}
+
+  _touch () {
     if (this._idleTimeout) {
       clearTimeout(this._idleTimeout)
       this._idleTimeout = undefined
@@ -65,10 +69,10 @@ export default class RpcServer {
     }
   }
 
-  async handle (req, res) {
+  async _handle (req, res) {
     let id
     try {
-      this.touch()
+      this._touch()
       const body = await readBody(req)
       id = body.id
       if (body.jsonrpc !== jsonrpc) throw new BadRequest()
@@ -76,6 +80,7 @@ export default class RpcServer {
       if (!handler) throw new MethodNotFound()
       if (!Array.isArray(body.params)) throw new BadRequest()
       const params = deserialize(body.params)
+      this.log('handle', body.method, ...params)
       let p = Promise.resolve(handler(...params))
       if (this.callTimeout) p = timeout(p, this.callTimeout)
       const result = serialize(await p)

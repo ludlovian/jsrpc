@@ -2,7 +2,8 @@
   "name": "jsrpc",
   "version": "1.0.0",
   "description": "Basic RPC over http",
-  "main": "dist/index.js",
+  "main": "dist/client.js",
+  "module": "dist/client.mjs",
   "scripts": {
     "clean": "rm -rf {dist,node_modules/.cache,.nyc_output,coverage}/",
     "format": "prettier-standard {src,test}/*.js",

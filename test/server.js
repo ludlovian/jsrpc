@@ -11,6 +11,7 @@ test.beforeEach(async t => {
   const { port } = server.server.address()
   const address = `http://localhost:${port}`
   t.context = { server, port, address }
+  server.options.port = port
 })
 
 test.afterEach(async t => {
@@ -127,6 +128,21 @@ test('server that times out', async t => {
   await delay(200)
   t.false(server.server.listening)
   t.context.stopped = true
+})
+
+test('logging', async t => {
+  const { server, address } = t.context
+  await server.stop()
+  server.on('foo', () => true)
+  const log = []
+  server.log = (...args) => log.push(args)
+  await server.start()
+  const body = { jsonrpc: '2.0', method: 'foo', params: ['bar', 123] }
+  await post(address, { body })
+  await server.stop()
+  t.context.stopped = true
+
+  t.snapshot(log)
 })
 
 function delay (ms) {

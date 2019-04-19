@@ -10,13 +10,13 @@ export default [
       process.env.NODE_ENV === 'production' && terser()
     ],
     output: [
-      {
-        file: 'dist/client.js',
+      { 
+        file: 'client/index.js',
         format: 'cjs',
         sourcemap: false,
       },
       {
-        file: 'dist/client.mjs',
+        file: 'client/index.mjs',
         format: 'esm',
         sourcemap: false
       }
@@ -31,32 +31,12 @@ export default [
     ],
     output: [
       {
-        file: 'dist/server.js',
+        file: 'server/index.js',
         format: 'cjs',
         sourcemap: false,
       },
       {
-        file: 'dist/server.mjs',
-        format: 'esm',
-        sourcemap: false
-      }
-    ]
-  },
-  {
-    input: 'src/index.js',
-    external: [ 'http', 'stoppable' ],
-    plugins: [
-      cleanup(),
-      process.env.NODE_ENV === 'production' && terser()
-    ],
-    output: [
-      {
-        file: 'dist/index.js',
-        format: 'cjs',
-        sourcemap: false,
-      },
-      {
-        file: 'dist/index.mjs',
+        file: 'server/index.mjs',
         format: 'esm',
         sourcemap: false
       }
