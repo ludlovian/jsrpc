@@ -2,13 +2,13 @@
   "name": "jsrpc",
   "version": "1.0.1",
   "description": "Basic RPC over http",
-  "main": "dist/client.js",
-  "module": "dist/client.mjs",
+  "main": "client/index.js",
+  "module": "client/index.mjs",
   "scripts": {
-    "clean": "rm -rf {dist,node_modules/.cache,.nyc_output,coverage}/",
+    "clean": "rm -rf client server node_modules/.cache .nyc_output coverage",
     "format": "prettier-standard {src,test}/*.js",
     "lint": "standard {src,test}/*.js | snazzy",
-    "coverage": "npm run test && nyc report --reporter=html && http-server coverage/ -p 8000",
+    "coverage": "npm run test && nyc report --reporter=html && cd coverage && python3 -m http.server 8000",
     "test": "nyc ava",
     "build": "rollup -c rollup.config.js"
   },
@@ -22,10 +22,9 @@
     "stoppable": "^1.1.0"
   },
   "devDependencies": {
-    "http-server": "^0.11.1",
-    "nyc": "^14.0.0",
+    "nyc": "^14.1.0",
     "prettier-standard": "^9.1.1",
-    "rollup": "^1.10.0",
+    "rollup": "^1.11.3",
     "rollup-plugin-cleanup": "^3.1.1",
     "rollup-plugin-terser": "^4.0.4",
     "snazzy": "^8.0.0",
