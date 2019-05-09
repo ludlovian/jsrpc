@@ -75,10 +75,10 @@ export default class RpcServer {
       this._touch()
       const body = await readBody(req)
       id = body.id
-      if (body.jsonrpc !== jsonrpc) throw new BadRequest()
+      if (body.jsonrpc !== jsonrpc) throw new BadRequest(body)
       const handler = this.methods[body.method]
-      if (!handler) throw new MethodNotFound()
-      if (!Array.isArray(body.params)) throw new BadRequest()
+      if (!handler) throw new MethodNotFound(body)
+      if (!Array.isArray(body.params)) throw new BadRequest(body)
       const params = deserialize(body.params)
       this.log('handle', body.method, ...params)
       let p = Promise.resolve(handler(...params))
@@ -141,19 +141,19 @@ class CustomError extends Error {
 }
 
 class MethodNotFound extends CustomError {
-  constructor () {
-    super('Method not found', { status: 404 })
+  constructor (body) {
+    super('Method not found', { status: 404, body })
   }
 }
 
 class BadRequest extends CustomError {
-  constructor () {
-    super('Bad request', { status: 400 })
+  constructor (body) {
+    super('Bad request', { status: 400, body })
   }
 }
 
 class TimedOut extends CustomError {
-  constructor () {
-    super('Timed out', { status: 504 })
+  constructor (body) {
+    super('Timed out', { status: 504, body })
   }
 }
