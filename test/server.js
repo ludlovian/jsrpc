@@ -87,7 +87,7 @@ test('bad handler', async t => {
   server.on('foo', () => {
     throw err
   })
-  let body = { jsonrpc: '2.0', method: 'foo', params: [] }
+  const body = { jsonrpc: '2.0', method: 'foo', params: [] }
 
   await post(address, { body }).then(
     () => t.fail(),
@@ -103,7 +103,7 @@ test('handler that times out', async t => {
     await delay(200)
     return 'bar'
   })
-  let body = { jsonrpc: '2.0', method: 'foo', params: [] }
+  const body = { jsonrpc: '2.0', method: 'foo', params: [] }
   await post(address, { body }).then(
     () => t.fail(),
     err => t.snapshot(err.data)
@@ -117,7 +117,7 @@ test('server that times out', async t => {
   const { server, address } = t.context
   server.idleTimeout = 300
   server.on('foo', async () => 'bar')
-  let body = { jsonrpc: '2.0', method: 'foo', params: [] }
+  const body = { jsonrpc: '2.0', method: 'foo', params: [] }
 
   await delay(200)
   await post(address, { body }).then(res => t.snapshot(res.data))

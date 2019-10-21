@@ -133,7 +133,7 @@ function readBody (req) {
 }
 function timeout (promise, interval) {
   return new Promise((resolve, reject) => {
-    let tm = setTimeout(() => reject(new TimedOut()), interval);
+    const tm = setTimeout(() => reject(new TimedOut()), interval);
     promise.then(result => {
       clearTimeout(tm);
       resolve(result);
