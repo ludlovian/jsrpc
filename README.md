@@ -7,14 +7,19 @@ Comes in client and server variants
 
 ### RpcServer
 ```
-import RpcServer from 'jsrpc/server'
+import { RpcServer } from 'jsrpc'
 server = new RpcServer(options)
 server = RpcServer.create(options)
 ```
 
 Creates a server. Options are the `net`/`http` listen options (e.g. `{ port: 12345 }`), but also include:
 - `callTimeout` timeout for any individual call (in ms) - default 5 sec
-- `idleTimeout` timeout after which server shuts down if no call been made - default 5 min
+
+Server is an EventEmitter, emitting the following:
+- `start` - when the server has started
+- `stop` - when the server has stopped
+- `call` - on each call with `{ method, params }`
+
 
 ### start
 `await server.start()`
@@ -27,8 +32,8 @@ Starts the server listening
 
 Stops the server
 
-### on
-`server.on(<method>, <handler>)`
+### handle
+`server.handle(<method>, <handler>)`
 
 Sets the handler for a given method. Returns the server for chaining. Handler will be `awaited` so can be async.
 
@@ -36,7 +41,7 @@ Sets the handler for a given method. Returns the server for chaining. Handler wi
 
 ### RpcClient
 ```
-import RcpClient from 'jsrpc/client'
+import { RcpClient } from 'jsrpc'
 client = new RpcClient(options)
 ```
 

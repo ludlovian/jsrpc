@@ -1,94 +1,78 @@
 'use strict'
 
 import http from 'http'
-import stoppable from 'stoppable'
+import EventEmitter from 'events'
+import stoppable from './stoppable'
 import { deserialize, serialize } from './util'
-const jsonrpc = '2.0'
+const JSONRPC = '2.0'
 
-export default class RpcServer {
+export default class RpcServer extends EventEmitter {
   constructor (options) {
-    const {
-      callTimeout = 10 * 1000,
-      idleTimeout = 5 * 60 * 1000,
-      ...otherOptions
-    } = options
+    super()
+    const { callTimeout = 10 * 1000, ...otherOptions } = options
     this.callTimeout = callTimeout
-    this.idleTimeout = idleTimeout
     this.options = otherOptions
     this.methods = {}
     this.server = stoppable(
-      http.createServer((req, res) => this._handle(req, res)),
-      5000
+      http.createServer((req, res) => this._handleRequest(req, res))
     )
-    this._touch()
   }
 
   static create (options) {
     return new RpcServer(options)
   }
 
-  on (method, handler) {
+  handle (method, handler) {
     this.methods[method] = handler
     return this
   }
 
-  async start () {
+  start () {
     return new Promise((resolve, reject) => {
+      if (this.started) return resolve(this)
       this.server.once('error', reject)
       this.server.listen(this.options, err => {
         // istanbul ignore if
         if (err) return reject(err)
-        this.log('start')
+        this.started = true
+        this.emit('start')
         resolve(this)
       })
     })
   }
 
-  stop () {
-    return new Promise((resolve, reject) => {
-      this.idleTimeout = undefined
-      this._touch()
-      this.server.stop(err => {
-        // istanbul ignore if
-        if (err) return reject(err)
-        this.log('stop')
-        resolve(this)
-      })
-    })
+  async stop () {
+    if (!this.started) return
+    this.started = false
+    await this.server.stop(5000)
+    this.emit('stop')
   }
 
-  log () {}
-
-  _touch () {
-    if (this._idleTimeout) {
-      clearTimeout(this._idleTimeout)
-      this._idleTimeout = undefined
-    }
-    if (this.idleTimeout) {
-      this._idleTimeout = setTimeout(this.stop.bind(this), this.idleTimeout)
-    }
-  }
-
-  async _handle (req, res) {
+  async _handleRequest (req, res) {
     let id
     try {
-      this._touch()
+      // read in the request body and validate
       const body = await readBody(req)
-      id = body.id
-      if (body.jsonrpc !== jsonrpc) throw new BadRequest(body)
-      const handler = this.methods[body.method]
+      const { id, jsonrpc, method, params: serializedParams } = body
+      if (jsonrpc !== JSONRPC) throw new BadRequest(body)
+      const handler = this.methods[method]
       if (!handler) throw new MethodNotFound(body)
-      if (!Array.isArray(body.params)) throw new BadRequest(body)
-      const params = deserialize(body.params)
-      this.log('handle', body.method, ...params)
-      let p = Promise.resolve(handler(...params))
+      if (!Array.isArray(serializedParams)) throw new BadRequest(body)
+      const params = deserialize(serializedParams)
+
+      // now call then underlying handler
+      this.emit('call', { method, params })
+      let p = Promise.resolve(handler.apply(this, params))
       if (this.callTimeout) p = timeout(p, this.callTimeout)
       const result = serialize(await p)
-      send(res, 200, { jsonrpc, result, id })
+
+      // and return the result
+      send(res, 200, { jsonrpc: JSONRPC, result, id })
     } catch (err) {
+      // any errors result in a safe error return
       const { name, message } = err
       const error = serialize({ name, message, ...err })
-      send(res, err.status || 500, { jsonrpc, error, id })
+      send(res, err.status || 500, { jsonrpc: JSONRPC, error, id })
     }
   }
 }

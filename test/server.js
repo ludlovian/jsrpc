@@ -2,7 +2,7 @@
 
 import test from 'ava'
 
-import RpcServer from '../src/server'
+import { RpcServer } from '../src'
 import { post } from 'httpie'
 
 test.beforeEach(async t => {
@@ -15,7 +15,6 @@ test.beforeEach(async t => {
 })
 
 test.afterEach(async t => {
-  if (t.context.stopped) return
   await t.context.server.stop()
 })
 
@@ -23,11 +22,26 @@ test('stop and start', async t => {
   t.pass()
 })
 
+test('over-starting and over-stopping', async t => {
+  const { server } = t.context
+  await server.stop()
+  t.false(server.started)
+
+  await server.start()
+  t.true(server.started)
+  await server.start()
+  t.true(server.started)
+
+  await server.stop()
+  t.false(server.started)
+  await server.stop()
+  t.false(server.started)
+})
+
 test('basic call', async t => {
   const { server, address } = t.context
-  server.idleTimeout = undefined
   server.callTimeout = undefined
-  server.on('foo', async bar => {
+  server.handle('foo', async bar => {
     t.is(bar, 'bar')
     return 'baz'
   })
@@ -61,7 +75,7 @@ test('bad requests', async t => {
     err => t.snapshot(err.data)
   )
 
-  server.on('foo', async () => 17)
+  server.handle('foo', async () => 17)
   body = { jsonrpc: '2.0', method: 'foo' }
   await post(address, { body }).then(
     () => t.fail(),
@@ -84,7 +98,7 @@ test('bad requests', async t => {
 test('bad handler', async t => {
   const { server, address } = t.context
   const err = new Error('bar')
-  server.on('foo', () => {
+  server.handle('foo', () => {
     throw err
   })
   const body = { jsonrpc: '2.0', method: 'foo', params: [] }
@@ -98,8 +112,7 @@ test('bad handler', async t => {
 test('handler that times out', async t => {
   const { server, address } = t.context
   server.callTimeout = 100
-  server.idleTimeout = 5000
-  server.on('foo', async () => {
+  server.handle('foo', async () => {
     await delay(200)
     return 'bar'
   })
@@ -113,29 +126,15 @@ test('handler that times out', async t => {
   await post(address, { body }).then(res => t.snapshot(res.data))
 })
 
-test('server that times out', async t => {
-  const { server, address } = t.context
-  server.idleTimeout = 300
-  server.on('foo', async () => 'bar')
-  const body = { jsonrpc: '2.0', method: 'foo', params: [] }
-
-  await delay(200)
-  await post(address, { body }).then(res => t.snapshot(res.data))
-
-  await delay(200)
-  t.true(server.server.listening)
-
-  await delay(200)
-  t.false(server.server.listening)
-  t.context.stopped = true
-})
-
-test('logging', async t => {
+test('events', async t => {
   const { server, address } = t.context
   await server.stop()
-  server.on('foo', () => true)
+  server.handle('foo', () => true)
   const log = []
-  server.log = (...args) => log.push(args)
+  server
+    .on('start', data => log.push(['start', data]))
+    .on('stop', data => log.push(['stop', data]))
+    .on('call', data => log.push(['call', data]))
   await server.start()
   const body = { jsonrpc: '2.0', method: 'foo', params: ['bar', 123] }
   await post(address, { body })

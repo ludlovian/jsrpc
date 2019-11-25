@@ -47,15 +47,11 @@ function makeRequest (options, body) {
   })
 }
 
-function readResponse (res) {
-  return new Promise((resolve, reject) => {
-    let data = ''
-    res.setEncoding('utf8')
-    res
-      .once('error', reject)
-      .on('data', chunk => {
-        data += chunk
-      })
-      .on('end', () => resolve(data))
-  }).then(data => JSON.parse(data))
+async function readResponse (res) {
+  res.setEncoding('utf8')
+  let data = ''
+  for await (const chunk of res) {
+    data += chunk
+  }
+  return JSON.parse(data)
 }
