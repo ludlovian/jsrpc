@@ -8,10 +8,9 @@ import { post } from 'httpie'
 test.beforeEach(async t => {
   const server = RpcServer.create({ port: 0 })
   await server.start()
-  const { port } = server.server.address()
+  const { port } = server.httpServer.address()
   const address = `http://localhost:${port}`
   t.context = { server, port, address }
-  server.options.port = port
 })
 
 test.afterEach(async t => {
@@ -23,8 +22,9 @@ test('stop and start', async t => {
 })
 
 test('over-starting and over-stopping', async t => {
-  const { server } = t.context
+  let { server, port } = t.context
   await server.stop()
+  server = RpcServer.create({ port })
   t.false(server.started)
 
   await server.start()
@@ -40,7 +40,6 @@ test('over-starting and over-stopping', async t => {
 
 test('basic call', async t => {
   const { server, address } = t.context
-  server.callTimeout = undefined
   server.handle('foo', async bar => {
     t.is(bar, 'bar')
     return 'baz'
@@ -110,25 +109,34 @@ test('bad handler', async t => {
 })
 
 test('handler that times out', async t => {
-  const { server, address } = t.context
-  server.callTimeout = 100
-  server.handle('foo', async () => {
-    await delay(200)
+  let { server, port, address } = t.context
+  await server.stop()
+  server = RpcServer.create({ port, callTimeout: 200 })
+  await server.start()
+
+  server.handle('foo100', async () => {
+    await delay(100)
     return 'bar'
   })
-  const body = { jsonrpc: '2.0', method: 'foo', params: [] }
+  server.handle('foo300', async () => {
+    await delay(300)
+    return 'bar'
+  })
+  let body = { jsonrpc: '2.0', method: 'foo300', params: [] }
   await post(address, { body }).then(
     () => t.fail(),
     err => t.snapshot(err.data)
   )
 
-  server.callTimeout = 300
+  body = { jsonrpc: '2.0', method: 'foo100', params: [] }
   await post(address, { body }).then(res => t.snapshot(res.data))
 })
 
 test('events', async t => {
-  const { server, address } = t.context
+  let { server, port, address } = t.context
   await server.stop()
+  server = RpcServer.create({ port })
+
   server.handle('foo', () => true)
   const log = []
   server
@@ -139,7 +147,6 @@ test('events', async t => {
   const body = { jsonrpc: '2.0', method: 'foo', params: ['bar', 123] }
   await post(address, { body })
   await server.stop()
-  t.context.stopped = true
 
   t.snapshot(log)
 })

@@ -4,18 +4,22 @@ import http from 'http'
 import EventEmitter from 'events'
 import stoppable from './stoppable'
 import { deserialize, serialize } from './util'
+
+const priv = Symbol('jsrpc')
+
 const JSONRPC = '2.0'
 
 export default class RpcServer extends EventEmitter {
-  constructor (options) {
+  constructor (opts) {
     super()
-    const { callTimeout = 10 * 1000, ...otherOptions } = options
-    this.callTimeout = callTimeout
-    this.options = otherOptions
-    this.methods = {}
-    this.server = stoppable(
-      http.createServer((req, res) => this._handleRequest(req, res))
-    )
+    const { callTimeout, ...options } = opts
+    const methods = {}
+    const server = stoppable(http.createServer(handleRequest.bind(this)))
+    const started = false
+    Object.defineProperty(this, priv, {
+      configurable: true,
+      value: { callTimeout, options, methods, server, started }
+    })
   }
 
   static create (options) {
@@ -23,57 +27,67 @@ export default class RpcServer extends EventEmitter {
   }
 
   handle (method, handler) {
-    this.methods[method] = handler
+    this[priv].methods[method] = handler
     return this
   }
 
   start () {
     return new Promise((resolve, reject) => {
-      if (this.started) return resolve(this)
-      this.server.once('error', reject)
-      this.server.listen(this.options, err => {
+      const { started, server, options } = this[priv]
+      if (started) return resolve(this)
+      server.once('error', reject)
+      server.listen(options, err => {
         // istanbul ignore if
         if (err) return reject(err)
-        this.started = true
+        this[priv].started = true
         this.emit('start')
         resolve(this)
       })
     })
   }
 
-  async stop () {
-    if (!this.started) return
-    this.started = false
-    await this.server.stop(5000)
-    this.emit('stop')
+  get started () {
+    return this[priv].started
   }
 
-  async _handleRequest (req, res) {
-    let id
-    try {
-      // read in the request body and validate
-      const body = await readBody(req)
-      const { id, jsonrpc, method, params: serializedParams } = body
-      if (jsonrpc !== JSONRPC) throw new BadRequest(body)
-      const handler = this.methods[method]
-      if (!handler) throw new MethodNotFound(body)
-      if (!Array.isArray(serializedParams)) throw new BadRequest(body)
-      const params = deserialize(serializedParams)
+  get httpServer () {
+    return this[priv].server
+  }
 
-      // now call then underlying handler
-      this.emit('call', { method, params })
-      let p = Promise.resolve(handler.apply(this, params))
-      if (this.callTimeout) p = timeout(p, this.callTimeout)
-      const result = serialize(await p)
+  async stop () {
+    if (!this[priv].started) return
+    this[priv].started = false
+    await this[priv].server.stop(5000)
+    this.emit('stop')
+  }
+}
 
-      // and return the result
-      send(res, 200, { jsonrpc: JSONRPC, result, id })
-    } catch (err) {
-      // any errors result in a safe error return
-      const { name, message } = err
-      const error = serialize({ name, message, ...err })
-      send(res, err.status || 500, { jsonrpc: JSONRPC, error, id })
-    }
+async function handleRequest (req, res) {
+  let id
+  try {
+    const { methods, callTimeout } = this[priv]
+    // read in the request body and validate
+    const body = await readBody(req)
+    const { id, jsonrpc, method, params: serializedParams } = body
+    if (jsonrpc !== JSONRPC) throw new BadRequest(body)
+    const handler = methods[method]
+    if (!handler) throw new MethodNotFound(body)
+    if (!Array.isArray(serializedParams)) throw new BadRequest(body)
+    const params = deserialize(serializedParams)
+
+    // now call then underlying handler
+    this.emit('call', { method, params })
+    let p = Promise.resolve(handler.apply(this, params))
+    if (callTimeout) p = timeout(p, callTimeout)
+    const result = serialize(await p)
+
+    // and return the result
+    send(res, 200, { jsonrpc: JSONRPC, result, id })
+  } catch (err) {
+    // any errors result in a safe error return
+    const { name, message } = err
+    const error = serialize({ name, message, ...err })
+    send(res, err.status || 500, { jsonrpc: JSONRPC, error, id })
   }
 }
 

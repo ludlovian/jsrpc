@@ -17,7 +17,7 @@ test('call which returns', async t => {
     .handle('foo', async () => data)
     .start()
 
-  const { port } = server.server.address()
+  const { port } = server.httpServer.address()
   const client = new RpcClient({ port })
   const result = await client.call('foo')
 
@@ -34,7 +34,7 @@ test('call which throws', async t => {
     })
     .start()
 
-  const { port } = server.server.address()
+  const { port } = server.httpServer.address()
   const client = new RpcClient({ port })
   await client.call('foo').then(
     () => t.fail(),
