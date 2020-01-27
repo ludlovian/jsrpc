@@ -42,6 +42,13 @@ test('call which throws', async t => {
       t.is(err.name, 'bar')
       t.is(err.message, 'foo')
       t.is(err.code, 'baz')
+
+      let Type = RpcClient.error('bar')
+      t.true(err instanceof Type)
+      t.is(err.constructor, Type)
+
+      Type = RpcClient.error('quux')
+      t.false(err instanceof Type)
     }
   )
 
