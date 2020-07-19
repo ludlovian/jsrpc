@@ -62,7 +62,7 @@ test('bad requests', async t => {
 
   let body
 
-  body = { jsonrpc: '3.0' }
+  body = { jsonrpc: '3.0', id: 'foo' }
   await post(address, { body }).then(
     () => t.fail(),
     err => t.snapshot(err.data)

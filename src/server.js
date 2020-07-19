@@ -68,7 +68,8 @@ async function handleRequest (req, res) {
     const { methods, callTimeout } = this[priv]
     // read in the request body and validate
     const body = await readBody(req)
-    const { id, jsonrpc, method, params: serializedParams } = body
+    const { id: _id, jsonrpc, method, params: serializedParams } = body
+    id = _id
     if (jsonrpc !== JSONRPC) throw new BadRequest(body)
     const handler = methods[method]
     if (!handler) throw new MethodNotFound(body)
@@ -113,7 +114,7 @@ function readBody (req) {
         try {
           resolve(JSON.parse(data))
         } catch (err) {
-          reject(new BadRequest())
+          reject(new BadRequest(data))
         }
       })
   })
