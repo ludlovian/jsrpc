@@ -2,11 +2,13 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
 var http = require('http');
-var http__default = _interopDefault(http);
-var EventEmitter = _interopDefault(require('events'));
+var EventEmitter = require('events');
+
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+var http__default = /*#__PURE__*/_interopDefaultLegacy(http);
+var EventEmitter__default = /*#__PURE__*/_interopDefaultLegacy(EventEmitter);
 
 function stoppable (server) {
   const openRequests = new Map();
@@ -53,13 +55,15 @@ function stoppable (server) {
 }
 
 function deserialize (obj) {
-  if (Array.isArray(obj)) return obj.map(deserialize)
+  if (Array.isArray(obj)) return Object.freeze(obj.map(deserialize))
   if (obj === null || typeof obj !== 'object') return obj
-  if ('$$date$$' in obj) return new Date(obj.$$date$$)
+  if ('$$date$$' in obj) return Object.freeze(new Date(obj.$$date$$))
   if ('$$undefined$$' in obj) return undefined
-  return Object.entries(obj).reduce(
-    (o, [k, v]) => ({ ...o, [k]: deserialize(v) }),
-    {}
+  return Object.freeze(
+    Object.entries(obj).reduce(
+      (o, [k, v]) => ({ ...o, [k]: deserialize(v) }),
+      {}
+    )
   )
 }
 function serialize (obj) {
@@ -75,12 +79,12 @@ function serialize (obj) {
 
 const priv = Symbol('jsrpc');
 const JSONRPC = '2.0';
-class RpcServer extends EventEmitter {
+class RpcServer extends EventEmitter__default['default'] {
   constructor (opts) {
     super();
     const { callTimeout, ...options } = opts;
     const methods = {};
-    const server = stoppable(http__default.createServer(handleRequest.bind(this)));
+    const server = stoppable(http__default['default'].createServer(handleRequest.bind(this)));
     const started = false;
     Object.defineProperty(this, priv, {
       configurable: true,

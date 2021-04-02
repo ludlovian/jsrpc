@@ -19,4 +19,7 @@ test('serialize', t => {
 
   const data2 = deserialize(serialized)
   t.deepEqual(data, data2)
+
+  t.true(Object.isFrozen(data2))
+  t.true(Object.isFrozen(data2.sub.date))
 })
