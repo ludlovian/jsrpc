@@ -1,6 +1,6 @@
 {
   "name": "jsrpc",
-  "version": "1.2.3",
+  "version": "2.0.0",
   "description": "Basic RPC over http",
   "main": "src/index.mjs",
   "module": "src/index.mjs",
