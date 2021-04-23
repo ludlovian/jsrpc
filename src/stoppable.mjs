@@ -35,7 +35,7 @@ export default function stoppable (server) {
 
       // request a close
       server.close(err => {
-        // istanbul ignore if
+        /* c8 ignore next */
         if (err) return reject(err)
         if (tm) clearTimeout(tm)
         resolve(graceful)

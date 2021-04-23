@@ -3,7 +3,7 @@
 import test from 'ava'
 import * as http from 'http'
 
-import stoppable from '../src/stoppable'
+import stoppable from '../src/stoppable.mjs'
 
 test('basic sequential usage', async t => {
   const server = stoppable(ponger(200))

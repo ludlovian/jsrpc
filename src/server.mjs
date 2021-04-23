@@ -2,8 +2,9 @@
 
 import http from 'http'
 import EventEmitter from 'events'
-import stoppable from './stoppable'
-import { deserialize, serialize } from './util'
+
+import stoppable from './stoppable.mjs'
+import { deserialize, serialize } from './util.mjs'
 
 const priv = Symbol('jsrpc')
 
@@ -37,7 +38,7 @@ export default class RpcServer extends EventEmitter {
       if (started) return resolve(this)
       server.once('error', reject)
       server.listen(options, err => {
-        // istanbul ignore if
+        /* c8 ignore next */
         if (err) return reject(err)
         this[priv].started = true
         this.emit('start')

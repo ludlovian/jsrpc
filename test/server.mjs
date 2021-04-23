@@ -1,9 +1,9 @@
 'use strict'
 
 import test from 'ava'
-
-import { RpcServer } from '../src'
 import { post } from 'httpie'
+
+import { RpcServer } from '../src/index.mjs'
 
 test.beforeEach(async t => {
   const server = RpcServer.create({ port: 0 })

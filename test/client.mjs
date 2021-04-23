@@ -2,7 +2,7 @@
 
 import test from 'ava'
 
-import { RpcClient, RpcServer } from '../src'
+import { RpcClient, RpcServer } from '../src/index.mjs'
 
 test('call which returns', async t => {
   const data = {

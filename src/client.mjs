@@ -1,7 +1,8 @@
 'use strict'
 
 import { request } from 'http'
-import { serialize, deserialize } from './util'
+
+import { serialize, deserialize } from './util.mjs'
 const jsonrpc = '2.0'
 
 const knownErrors = {}

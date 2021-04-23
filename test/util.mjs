@@ -1,7 +1,7 @@
 'use strict'
 
 import test from 'ava'
-import { serialize, deserialize } from '../src/util'
+import { serialize, deserialize } from '../src/util.mjs'
 
 test('serialize', t => {
   const data = {

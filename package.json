@@ -5,10 +5,11 @@
   "main": "src/index.mjs",
   "module": "src/index.mjs",
   "source": "src/index.mjs",
+  "type": "module",
   "scripts": {
     "clean": "rm -rf dist node_modules/.cache coverage",
-    "format": "prettier-standard {src,test}/*.{m,}js",
-    "lint": "standard {src,test}/*{m,}.js | snazzy",
+    "format": "prettier-standard {src,test}/*.mjs",
+    "lint": "standard {src,test}/*.mjs | snazzy",
     "coverage": "c8 report --reporter=html && sirv coverage -H '0.0.0.0' -p 8000",
     "test": "c8 ava"
   },
@@ -16,12 +17,6 @@
   "license": "Unlicense",
   "devDependencies": {
     "ava": "^3.10.1",
-    "esm": "^3.2.25",
     "httpie": "^1.1.2"
-  },
-  "ava": {
-    "require": [
-      "esm"
-    ]
   }
 }
