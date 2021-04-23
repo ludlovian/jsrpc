@@ -2,24 +2,22 @@
   "name": "jsrpc",
   "version": "1.2.3",
   "description": "Basic RPC over http",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "main": "src/index.mjs",
+  "module": "src/index.mjs",
+  "source": "src/index.mjs",
   "scripts": {
-    "clean": "rm -rf dist node_modules/.cache .nyc_output coverage",
-    "format": "prettier-standard {src,test}/*.js",
-    "lint": "standard {src,test}/*.js | snazzy",
-    "coverage": "nyc report --reporter=html && sirv coverage -H '0.0.0.0' -p 8000",
-    "test": "nyc ava",
-    "build": "rollup -c rollup.config.js"
+    "clean": "rm -rf dist node_modules/.cache coverage",
+    "format": "prettier-standard {src,test}/*.{m,}js",
+    "lint": "standard {src,test}/*{m,}.js | snazzy",
+    "coverage": "c8 report --reporter=html && sirv coverage -H '0.0.0.0' -p 8000",
+    "test": "c8 ava"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Unlicense",
   "devDependencies": {
     "ava": "^3.10.1",
     "esm": "^3.2.25",
-    "httpie": "^1.1.2",
-    "rollup-plugin-cleanup": "^3.1.1",
-    "rollup-plugin-terser": "^6.1.0"
+    "httpie": "^1.1.2"
   },
   "ava": {
     "require": [
