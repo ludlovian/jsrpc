@@ -7,9 +7,9 @@
   "source": "src/index.mjs",
   "type": "module",
   "exports": {
-    ".": "src/index.mjs",
-    "./server": "src/server.mjs",
-    "./client": "src/client.mjs"
+    ".": "./src/index.mjs",
+    "./server": "./src/server.mjs",
+    "./client": "./src/client.mjs"
   },
   "scripts": {
     "clean": "rm -rf dist node_modules/.cache coverage",
