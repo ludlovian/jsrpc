@@ -1,15 +1,15 @@
 {
   "name": "jsrpc",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Basic RPC over http",
   "main": "src/index.mjs",
   "module": "src/index.mjs",
   "source": "src/index.mjs",
   "type": "module",
   "exports": {
-      ".": "src/index.mjs",
-      "./server": "src/server.mjs",
-      "./client": "src/client.mjs" 
+    ".": "src/index.mjs",
+    "./server": "src/server.mjs",
+    "./client": "src/client.mjs"
   },
   "scripts": {
     "clean": "rm -rf dist node_modules/.cache coverage",
