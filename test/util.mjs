@@ -1,6 +1,7 @@
-'use strict'
+import { test } from 'uvu'
+import * as assert from 'uvu/assert'
+import snapshot from './helpers/snapshot.mjs'
 
-import test from 'ava'
 import { serialize, deserialize } from '../src/util.mjs'
 
 test('serialize', t => {
@@ -15,11 +16,13 @@ test('serialize', t => {
   }
 
   const serialized = serialize(data)
-  t.snapshot(serialized)
+  snapshot('util-serialize.json', serialized)
 
   const data2 = deserialize(serialized)
-  t.deepEqual(data, data2)
+  assert.equal(data, data2)
 
-  t.true(Object.isFrozen(data2))
-  t.true(Object.isFrozen(data2.sub.date))
+  assert.ok(Object.isFrozen(data2))
+  assert.ok(Object.isFrozen(data2.sub.date))
 })
+
+test.run()

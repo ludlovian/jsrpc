@@ -1,5 +1,3 @@
-'use strict'
-
 import http from 'http'
 import EventEmitter from 'events'
 
@@ -41,7 +39,7 @@ export default class RpcServer extends EventEmitter {
         /* c8 ignore next */
         if (err) return reject(err)
         this[priv].started = true
-        this.emit('start')
+        this.emit('start', null)
         resolve(this)
       })
     })
@@ -59,7 +57,7 @@ export default class RpcServer extends EventEmitter {
     if (!this[priv].started) return
     this[priv].started = false
     await this[priv].server.stop(5000)
-    this.emit('stop')
+    this.emit('stop', null)
   }
 }
 

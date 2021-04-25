@@ -1,0 +1,11 @@
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "name": "TimedOut",
+    "message": "Timed out",
+    "status": 504,
+    "body": {
+      "$$undefined$$": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "name": "BadRequest",
+    "message": "Bad request",
+    "status": 400,
+    "body": {
+      "jsonrpc": "2.0",
+      "method": "foo",
+      "params": "notArray"
+    }
+  }
+}

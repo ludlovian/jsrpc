@@ -1,10 +1,9 @@
-'use strict'
-
-import test from 'ava'
+import { test } from 'uvu'
+import * as assert from 'uvu/assert'
 
 import { RpcClient, RpcServer } from '../src/index.mjs'
 
-test('call which returns', async t => {
+test('call which returns', async () => {
   const data = {
     sub: {
       arr: [undefined, 'foo'],
@@ -21,11 +20,11 @@ test('call which returns', async t => {
   const client = new RpcClient({ port })
   const result = await client.call('foo')
 
-  t.deepEqual(result, data)
+  assert.equal(result, data)
   await server.stop()
 })
 
-test('call which throws', async t => {
+test('call which throws', async () => {
   const err = Object.assign(new Error('foo'), { name: 'bar', code: 'baz' })
 
   const server = await RpcServer.create({ port: 0 })
@@ -36,21 +35,20 @@ test('call which throws', async t => {
 
   const { port } = server.httpServer.address()
   const client = new RpcClient({ port })
-  await client.call('foo').then(
-    () => t.fail(),
-    err => {
-      t.is(err.name, 'bar')
-      t.is(err.message, 'foo')
-      t.is(err.code, 'baz')
+  await client.call('foo').then(assert.unreachable, err => {
+    assert.is(err.name, 'bar')
+    assert.is(err.message, 'foo')
+    assert.is(err.code, 'baz')
 
-      let Type = RpcClient.error('bar')
-      t.true(err instanceof Type)
-      t.is(err.constructor, Type)
+    let Type = RpcClient.error('bar')
+    assert.instance(err, Type)
+    assert.is(err.constructor, Type)
 
-      Type = RpcClient.error('quux')
-      t.false(err instanceof Type)
-    }
-  )
+    Type = RpcClient.error('quux')
+    assert.not.instance(err, Type)
+  })
 
   await server.stop()
 })
+
+test.run()

@@ -15,13 +15,13 @@
     "clean": "rm -rf dist node_modules/.cache coverage",
     "format": "prettier-standard {src,test}/*.mjs",
     "lint": "standard {src,test}/*.mjs | snazzy",
-    "coverage": "c8 report --reporter=html && sirv coverage -H '0.0.0.0' -p 8000",
-    "test": "c8 ava"
+    "coverage": "npm run test && c8 report --reporter=html && sirv coverage -H '0.0.0.0' -p 8000",
+    "test": "c8 uvu"
   },
   "author": "",
   "license": "Unlicense",
   "devDependencies": {
-    "ava": "^3.10.1",
-    "httpie": "^1.1.2"
+    "httpie": "^1.1.2",
+    "uvu": "^0.5.1"
   }
 }

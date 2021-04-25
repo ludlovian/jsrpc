@@ -1,20 +1,20 @@
-'use strict'
+import { test } from 'uvu'
+import * as assert from 'uvu/assert'
 
-import test from 'ava'
 import * as http from 'http'
 
 import stoppable from '../src/stoppable.mjs'
 
-test('basic sequential usage', async t => {
+test('basic sequential usage', async () => {
   const server = stoppable(ponger(200))
   server.listen()
   const { port } = server.address()
   const result = await ping({ port })
-  t.is(result, 'pong')
+  assert.is(result, 'pong')
   await server.stop()
 })
 
-test('close whilst being served', async t => {
+test('close whilst being served', async () => {
   const server = stoppable(ponger(300))
   server.listen()
   const { port } = server.address()
@@ -23,12 +23,12 @@ test('close whilst being served', async t => {
   const pResult2 = ping({ port })
   await delay(100)
   const pStop = server.stop(300)
-  t.is(await pResult1, 'pong')
-  t.is(await pResult2, 'pong')
-  t.true(await pStop)
+  assert.is(await pResult1, 'pong')
+  assert.is(await pResult2, 'pong')
+  assert.ok(await pStop)
 })
 
-test('force close a slow server', async t => {
+test('force close a slow server', async () => {
   const server = stoppable(ponger(500))
   server.listen()
   const { port } = server.address()
@@ -36,11 +36,11 @@ test('force close a slow server', async t => {
   server.on('error', console.log)
   await delay(100)
   const pStop = server.stop(200)
-  t.false(await pStop)
-  await t.throwsAsync(pResult)
+  assert.not.ok(await pStop)
+  await pResult.then(assert.unreachable, err => assert.instance(err, Error))
 })
 
-test('close server twice', async t => {
+test('close server twice', async () => {
   const server = stoppable(ponger(200))
   server.listen()
   const { port } = server.address()
@@ -48,9 +48,9 @@ test('close server twice', async t => {
   await delay(100)
   const pStop1 = server.stop(300)
   const pStop2 = server.stop(300)
-  t.is(await pResult, 'pong')
-  t.true(await pStop1)
-  t.is(await pStop2, undefined)
+  assert.is(await pResult, 'pong')
+  assert.ok(await pStop1)
+  assert.is(await pStop2, undefined)
 })
 
 const ponger = delay =>
@@ -73,3 +73,5 @@ const ping = opts =>
   })
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+test.run()

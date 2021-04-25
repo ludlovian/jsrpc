@@ -1,0 +1,20 @@
+[
+  [
+    "start",
+    null
+  ],
+  [
+    "call",
+    {
+      "method": "foo",
+      "params": [
+        "bar",
+        123
+      ]
+    }
+  ],
+  [
+    "stop",
+    null
+  ]
+]

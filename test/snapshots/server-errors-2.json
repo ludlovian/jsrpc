@@ -1,0 +1,12 @@
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "name": "MethodNotFound",
+    "message": "Method not found",
+    "status": 404,
+    "body": {
+      "jsonrpc": "2.0",
+      "method": "foo"
+    }
+  }
+}

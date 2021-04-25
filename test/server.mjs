@@ -1,47 +1,49 @@
-'use strict'
+import { test } from 'uvu'
+import * as assert from 'uvu/assert'
 
-import test from 'ava'
+import snapshot from './helpers/snapshot.mjs'
+
 import { post } from 'httpie'
 
 import { RpcServer } from '../src/index.mjs'
 
-test.beforeEach(async t => {
+test.before.each(async ctx => {
   const server = RpcServer.create({ port: 0 })
   await server.start()
   const { port } = server.httpServer.address()
   const address = `http://localhost:${port}`
-  t.context = { server, port, address }
+  Object.assign(ctx, { server, port, address })
 })
 
-test.afterEach(async t => {
-  await t.context.server.stop()
+test.after.each(async ctx => {
+  await ctx.server.stop()
 })
 
 test('stop and start', async t => {
-  t.pass()
+  assert.ok(true)
 })
 
-test('over-starting and over-stopping', async t => {
-  let { server, port } = t.context
+test('over-starting and over-stopping', async ctx => {
+  let { server, port } = ctx
   await server.stop()
   server = RpcServer.create({ port })
-  t.false(server.started)
+  assert.not.ok(server.started)
 
   await server.start()
-  t.true(server.started)
+  assert.ok(server.started)
   await server.start()
-  t.true(server.started)
+  assert.ok(server.started)
 
   await server.stop()
-  t.false(server.started)
+  assert.not.ok(server.started)
   await server.stop()
-  t.false(server.started)
+  assert.not.ok(server.started)
 })
 
-test('basic call', async t => {
-  const { server, address } = t.context
+test('basic call', async ctx => {
+  const { server, address } = ctx
   server.handle('foo', async bar => {
-    t.is(bar, 'bar')
+    assert.is(bar, 'bar')
     return 'baz'
   })
 
@@ -53,63 +55,57 @@ test('basic call', async t => {
     }
   })
 
-  t.is(data.jsonrpc, '2.0')
-  t.is(data.result, 'baz')
+  assert.is(data.jsonrpc, '2.0')
+  assert.is(data.result, 'baz')
 })
 
-test('bad requests', async t => {
-  const { server, address } = t.context
+test('bad requests', async ctx => {
+  const { server, address } = ctx
 
   let body
 
   body = { jsonrpc: '3.0', id: 'foo' }
-  await post(address, { body }).then(
-    () => t.fail(),
-    err => t.snapshot(err.data)
+  await post(address, { body }).then(assert.unreachable, err =>
+    snapshot('server-errors-1.json', err.data)
   )
 
   body = { jsonrpc: '2.0', method: 'foo' }
-  await post(address, { body }).then(
-    () => t.fail(),
-    err => t.snapshot(err.data)
+  await post(address, { body }).then(assert.unreachable, err =>
+    snapshot('server-errors-2.json', err.data)
   )
 
   server.handle('foo', async () => 17)
   body = { jsonrpc: '2.0', method: 'foo' }
-  await post(address, { body }).then(
-    () => t.fail(),
-    err => t.snapshot(err.data)
+  await post(address, { body }).then(assert.unreachable, err =>
+    snapshot('server-errors-3.json', err.data)
   )
 
   body = { jsonrpc: '2.0', method: 'foo', params: 'notArray' }
-  await post(address, { body }).then(
-    () => t.fail(),
-    err => t.snapshot(err.data)
+  await post(address, { body }).then(assert.unreachable, err =>
+    snapshot('server-errors-4.json', err.data)
   )
 
   body = 'notJSON'
-  await post(address, { body }).then(
-    () => t.fail(),
-    err => t.snapshot(err.data)
+  await post(address, { body }).then(assert.unreachable, err =>
+    snapshot('server-errors-5.json', err.data)
   )
 })
 
-test('bad handler', async t => {
-  const { server, address } = t.context
+test('bad handler', async ctx => {
+  const { server, address } = ctx
   const err = new Error('bar')
   server.handle('foo', () => {
     throw err
   })
   const body = { jsonrpc: '2.0', method: 'foo', params: [] }
 
-  await post(address, { body }).then(
-    () => t.fail(),
-    err => t.snapshot(err.data)
+  await post(address, { body }).then(assert.unreachable, err =>
+    snapshot('server-bad-handler.json', err.data)
   )
 })
 
-test('handler that times out', async t => {
-  let { server, port, address } = t.context
+test('handler that times out', async ctx => {
+  let { server, port, address } = ctx
   await server.stop()
   server = RpcServer.create({ port, callTimeout: 200 })
   await server.start()
@@ -123,17 +119,20 @@ test('handler that times out', async t => {
     return 'bar'
   })
   let body = { jsonrpc: '2.0', method: 'foo300', params: [] }
-  await post(address, { body }).then(
-    () => t.fail(),
-    err => t.snapshot(err.data)
+  await post(address, { body }).then(assert.unreachable, err =>
+    snapshot('server-handler-timeout-1.json', err.data)
   )
 
   body = { jsonrpc: '2.0', method: 'foo100', params: [] }
-  await post(address, { body }).then(res => t.snapshot(res.data))
+  await post(address, { body }).then(res =>
+    snapshot('server-handler-timeout-2.json', res.data)
+  )
+
+  await server.stop()
 })
 
-test('events', async t => {
-  let { server, port, address } = t.context
+test('events', async ctx => {
+  let { server, port, address } = ctx
   await server.stop()
   server = RpcServer.create({ port })
 
@@ -148,9 +147,11 @@ test('events', async t => {
   await post(address, { body })
   await server.stop()
 
-  t.snapshot(log)
+  snapshot('server-events.json', log)
 })
 
 function delay (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+test.run()

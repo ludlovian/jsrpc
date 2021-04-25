@@ -1,0 +1,7 @@
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "name": "Error",
+    "message": "bar"
+  }
+}
